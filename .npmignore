@@ -1,0 +1,34 @@
+# Source files (only publish built dist/)
+nodes/
+credentials/
+*.ts
+tsconfig.json
+gulpfile.js
+
+# Test files
+core-test.js
+test-content.md
+
+# Development files
+.github/
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+.env*
+node_modules/
+npm-debug.log*
+
+# Git files
+.git/
+.gitignore
+
+# Build artifacts
+*.tgz
+
+# Keep these files for npm package
+# README.md
+# LICENSE
+# CHANGELOG.md
+# package.json
+# dist/

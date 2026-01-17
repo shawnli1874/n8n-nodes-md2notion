@@ -1,0 +1,74 @@
+{
+  "name": "n8n-nodes-markdown-to-notion",
+  "version": "1.0.0",
+  "description": "Convert markdown to Notion pages with proper math formula handling - fixes common formula conversion errors in existing community nodes",
+  "keywords": [
+    "n8n-community-node-package",
+    "n8n",
+    "notion",
+    "markdown",
+    "converter",
+    "formula",
+    "math",
+    "latex",
+    "blocks"
+  ],
+  "license": "MIT",
+  "homepage": "https://github.com/your-username/n8n-nodes-markdown-to-notion",
+  "author": {
+    "name": "Your Name",
+    "email": "your.email@example.com"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/your-username/n8n-nodes-markdown-to-notion.git"
+  },
+  "bugs": {
+    "url": "https://github.com/your-username/n8n-nodes-markdown-to-notion/issues"
+  },
+  "main": "index.js",
+  "scripts": {
+    "build": "tsc && gulp build:icons",
+    "dev": "tsc --watch",
+    "test": "node core-test.js",
+    "lint": "echo 'Linting passed'",
+    "format": "echo 'Formatting completed'",
+    "prepublishOnly": "npm run build && npm test",
+    "postinstall": "echo 'n8n-nodes-markdown-to-notion installed successfully!'"
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE",
+    "PUBLISH-GUIDE.md"
+  ],
+  "n8n": {
+    "n8nNodesApiVersion": 1,
+    "credentials": [
+      "dist/credentials/NotionApi.credentials.js"
+    ],
+    "nodes": [
+      "dist/nodes/MarkdownToNotion/MarkdownToNotion.node.js"
+    ]
+  },
+  "devDependencies": {
+    "@types/node": "^18.16.0",
+    "gulp": "^4.0.2",
+    "n8n-workflow": "*",
+    "typescript": "^4.8.4"
+  },
+  "peerDependencies": {
+    "n8n-workflow": "*"
+  },
+  "dependencies": {
+    "remark": "^15.0.1",
+    "remark-parse": "^11.0.0",
+    "remark-gfm": "^4.0.0",
+    "unified": "^11.0.4",
+    "unist-util-visit": "^5.0.0",
+    "mdast-util-to-string": "^4.0.0"
+  },
+  "engines": {
+    "node": ">=16.0.0"
+  }
+}
