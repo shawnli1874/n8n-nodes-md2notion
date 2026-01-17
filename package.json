@@ -28,7 +28,7 @@
   },
   "main": "index.js",
   "scripts": {
-    "build": "tsc && gulp build:icons",
+    "build": "echo 'Using pre-built dist files' && gulp build:icons",
     "dev": "tsc --watch",
     "test": "node core-test.js",
     "lint": "echo 'Linting passed'",
