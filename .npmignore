@@ -2,15 +2,19 @@
 nodes/
 credentials/
 *.ts
+!*.d.ts
 tsconfig.json
 gulpfile.js
 
-# Test files
+# Test files - exclude from npm package
 __tests__/
+dist/**/__tests__/
 *.test.ts
 *.test.js
+*.test.d.ts
 *.spec.ts
 *.spec.js
+*.spec.d.ts
 jest.config.js
 verify-fixes.js
 
@@ -36,4 +40,7 @@ npm-debug.log*
 # LICENSE
 # CHANGELOG.md
 # package.json
-# dist/
+# dist/nodes/**/*.js
+# dist/nodes/**/*.d.ts
+# dist/credentials/**/*.js
+# dist/credentials/**/*.d.ts

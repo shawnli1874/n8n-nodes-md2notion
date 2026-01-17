@@ -39,9 +39,14 @@
     "postinstall": "echo 'n8n-nodes-md2notion installed successfully!'"
   },
   "files": [
-    "dist/nodes",
-    "dist/credentials",
-    "dist/nodes/MarkdownToNotion/notion.svg",
+    "dist/nodes/**/*.js",
+    "dist/nodes/**/*.d.ts",
+    "dist/nodes/**/*.svg",
+    "dist/credentials/**/*.js",
+    "dist/credentials/**/*.d.ts",
+    "!dist/**/__tests__",
+    "!dist/**/*.test.*",
+    "!dist/**/*.spec.*",
     "README.md",
     "LICENSE",
     "CHANGELOG.md"
