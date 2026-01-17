@@ -1,5 +1,5 @@
 {
-  "name": "n8n-nodes-markdown-to-notion",
+  "name": "n8n-nodes-markdown-notion-fixed",
   "version": "1.0.0",
   "description": "Convert markdown to Notion pages with proper math formula handling - fixes common formula conversion errors in existing community nodes",
   "keywords": [
