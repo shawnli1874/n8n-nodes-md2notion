@@ -7,6 +7,32 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.2.1] - 2026-01-17
+
+### 🐛 Fixed - Critical Runtime Error
+
+#### Bug Fixes
+- **Fixed `convertMarkdownToNotionBlocks is not a function` error**
+  - Rebuilt JavaScript compilation from TypeScript source
+  - Restored all missing methods in compiled output
+  - Verified all 16+ block types work correctly
+
+#### Technical Details
+- The issue was caused by incomplete JavaScript compilation
+- All toggle block functionality remains intact
+- No breaking changes to API or functionality
+- All tests pass (4/4 core tests + comprehensive test suite)
+
+#### Verification
+- ✅ Node loads correctly in n8n
+- ✅ All methods exist and are callable
+- ✅ Toggle blocks work as expected
+- ✅ Math formula preservation works
+- ✅ All 16+ block types supported
+
+### 📋 Note
+This is a patch release that fixes a critical runtime error. All functionality from v1.2.0 is preserved and working correctly.
+
 ## [1.2.0] - 2026-01-17
 
 ### ✨ Added - Toggle Block Support
