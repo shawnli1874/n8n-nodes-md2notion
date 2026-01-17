@@ -4,15 +4,15 @@
 [![CI](https://github.com/shawnli1874/n8n-nodes-md2notion/workflows/CI/badge.svg)](https://github.com/shawnli1874/n8n-nodes-md2notion/actions)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-A custom n8n node that converts markdown content to Notion page blocks with **proper formula handling**.
+A custom n8n node that converts markdown content to Notion page blocks with **comprehensive block type support** and **proper formula handling**.
 
 ## 🎯 Why This Node?
 
-Existing n8n community nodes for markdown-to-Notion conversion have a critical flaw: they incorrectly handle inline math formulas like `$E = mc^2$`, causing rendering errors in Notion. This node **solves that problem** by:
+Existing n8n community nodes for markdown-to-Notion conversion have critical limitations: they incorrectly handle inline math formulas like `$E = mc^2$` and support only basic block types. This node **solves these problems** by:
 
-- ✅ **Preserving math formulas** exactly as written
+- ✅ **Preserving math formulas** exactly as written (inline and block)
+- ✅ **Supporting 16+ Notion block types** including todos, callouts, tables, toggles, and more
 - ✅ **Using reliable parsing** with the remark ecosystem  
-- ✅ **Supporting all markdown elements** with proper formatting
 - ✅ **Providing excellent error handling** and user feedback
 
 ## 🚀 Quick Start
@@ -58,18 +58,44 @@ npm install -g n8n-nodes-md2notion
 
 ### Supported Markdown Elements
 
-| Element | Notion Block Type | Status |
-|---------|------------------|--------|
-| Headings (H1-H3) | `heading_1/2/3` | ✅ |
-| Paragraphs | `paragraph` | ✅ |
-| **Bold** and *italic* | Rich text formatting | ✅ |
-| `Inline code` | Code annotation | ✅ |
-| Code blocks | `code` | ✅ |
-| - Bulleted lists | `bulleted_list_item` | ✅ |
-| 1. Numbered lists | `numbered_list_item` | ✅ |
-| > Blockquotes | `quote` | ✅ |
-| [Links](url) | Rich text with links | ✅ |
-| **Math formulas** | Preserved as plain text | ✅ |
+| Element | Notion Block Type | Syntax | Status |
+|---------|------------------|--------|--------|
+| **Text & Formatting** | | | |
+| Headings (H1-H3) | `heading_1/2/3` | `# ## ###` | ✅ |
+| Paragraphs | `paragraph` | Regular text | ✅ |
+| **Bold** and *italic* | Rich text formatting | `**bold** *italic*` | ✅ |
+| `Inline code` | Code annotation | `` `code` `` | ✅ |
+| [Links](url) | Rich text with links | `[text](url)` | ✅ |
+| **Lists & Tasks** | | | |
+| - Bulleted lists | `bulleted_list_item` | `- item` | ✅ |
+| 1. Numbered lists | `numbered_list_item` | `1. item` | ✅ |
+| - [ ] Todo items | `to_do` | `- [ ] task` | ✅ |
+| - [x] Completed todos | `to_do` | `- [x] done` | ✅ |
+| **Content Blocks** | | | |
+| Code blocks | `code` | ``` ```language ``` | ✅ |
+| > Blockquotes | `quote` | `> quote` | ✅ |
+| > [!note] Callouts | `callout` | `> [!note] text` | ✅ |
+| **Media & Links** | | | |
+| ![Images](url) | `image` | `![alt](url)` | ✅ |
+| Bookmarks | `bookmark` | `https://example.com` | ✅ |
+| **Structure** | | | |
+| Dividers | `divider` | `---` or `***` | ✅ |
+| Tables | `table` + `table_row` | Markdown tables | ✅ |
+| Toggle blocks | `toggle` | `<details><summary>` | ✅ |
+| **Math** | | | |
+| Inline formulas | Preserved text | `$E = mc^2$` | ✅ |
+| Block equations | `equation` | `$$formula$$` | ✅ |
+
+### Callout Types Supported
+
+| Syntax | Icon | Description |
+|--------|------|-------------|
+| `> [!note]` | 📝 | General notes and information |
+| `> [!warning]` | ⚠️ | Important warnings |
+| `> [!tip]` | 💡 | Helpful tips and suggestions |
+| `> [!info]` | ℹ️ | Additional information |
+| `> [!important]` | ❗ | Critical information |
+| `> [!caution]` | ⚠️ | Cautionary notes |
 
 ### Configuration Options
 
@@ -80,16 +106,100 @@ npm install -g n8n-nodes-md2notion
 
 **The Problem**: Other nodes convert `$E = mc^2$` incorrectly, breaking Notion rendering.
 
-**Our Solution**: Smart formula preservation algorithm:
+**Our Solution**: Smart formula preservation algorithm that handles both inline and block equations:
 
 ```markdown
 Input:  "This equation $E = mc^2$ is famous, but $10 is just money."
 Output: "This equation $E = mc^2$ is famous, but $10 is just money."
+
+Block equation:
+$$
+\int_{-\infty}^{\infty} e^{-x^2} dx = \sqrt{\pi}
+$$
 ```
 
 The node intelligently distinguishes between math formulas and regular dollar signs.
 
 ## 📖 Examples
+
+### Comprehensive Example
+
+This example showcases all supported block types:
+
+```markdown
+# Project Documentation
+
+This is a regular paragraph with **bold** and *italic* text, plus inline math: $E = mc^2$.
+
+## Task List
+
+- [ ] Review the codebase
+- [x] Write comprehensive tests  
+- [ ] Calculate the integral $\int x^2 dx$
+
+## Important Notes
+
+> [!warning] Critical Issue
+> The server will be down for maintenance.
+
+> [!tip] Pro Tip
+> Use keyboard shortcuts to speed up your workflow.
+
+> This is a regular blockquote for general information.
+
+## Code Example
+
+```javascript
+const energy = mass * Math.pow(speedOfLight, 2);
+console.log(`Energy: ${energy}`);
+```
+
+## Expandable Sections
+
+<details>
+<summary>Advanced Configuration</summary>
+
+### Database Settings
+- Connection timeout: 30 seconds
+- Max pool size: 10
+- Enable SSL: true
+
+### Performance Tuning
+The system can handle up to $10^6$ requests per second with proper configuration.
+</details>
+
+<details>
+<summary>Troubleshooting Guide</summary>
+If you encounter issues, check the following:
+
+1. Verify API credentials
+2. Check network connectivity  
+3. Review error logs
+</details>
+
+## Data Table
+
+| Name | Formula | Value |
+|------|---------|-------|
+| Energy | $E = mc^2$ | Variable |
+| Force | $F = ma$ | Variable |
+
+---
+
+## Mathematical Proof
+
+The fundamental theorem of calculus:
+
+$$
+\int_a^b f'(x) dx = f(b) - f(a)
+$$
+
+For more information, visit: https://en.wikipedia.org/wiki/Calculus
+
+![Mathematical Diagram](https://via.placeholder.com/400x200)
+
+Final paragraph with mixed content: **bold**, *italic*, `code`, and $f(x) = x^2$ formula.
+```
 
 ### Basic Usage
 

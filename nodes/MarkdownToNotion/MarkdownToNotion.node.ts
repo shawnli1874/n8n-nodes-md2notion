@@ -231,6 +231,9 @@ export class MarkdownToNotion implements INodeType {
 			});
 		}
 
+		// Pre-process toggle blocks (details/summary)
+		processedMarkdown = this.preprocessToggleBlocks(processedMarkdown);
+
 		const processor = unified()
 			.use(remarkParse)
 			.use(remarkGfm);
@@ -244,6 +247,33 @@ export class MarkdownToNotion implements INodeType {
 					blocks.push(this.createHeadingBlock(node, mathPlaceholders));
 					break;
 				case 'paragraph': {
+					const content = mdastToString(node).trim();
+					
+					if (this.isDivider(content)) {
+						blocks.push(this.createDividerBlock());
+						break;
+					}
+					
+					if (this.isStandaloneUrl(content)) {
+						blocks.push(this.createBookmarkBlock(content));
+						break;
+					}
+					
+					if (this.isBlockEquation(content)) {
+						blocks.push(this.createEquationBlock(content));
+						break;
+					}
+					
+					if (this.isCallout(content)) {
+						blocks.push(this.createCalloutBlock(node, mathPlaceholders));
+						break;
+					}
+
+					if (this.isToggleBlock(content)) {
+						blocks.push(this.createToggleBlock(content, mathPlaceholders));
+						break;
+					}
+					
 					const paragraphBlock = this.createParagraphBlock(node, mathPlaceholders);
 					if (paragraphBlock) {
 						blocks.push(paragraphBlock);
@@ -256,8 +286,23 @@ export class MarkdownToNotion implements INodeType {
 				case 'code':
 					blocks.push(this.createCodeBlock(node));
 					break;
-				case 'blockquote':
-					blocks.push(this.createQuoteBlock(node, mathPlaceholders));
+				case 'blockquote': {
+					const quoteContent = mdastToString(node).trim();
+					if (this.isCallout(quoteContent)) {
+						blocks.push(this.createCalloutBlock(node, mathPlaceholders));
+					} else {
+						blocks.push(this.createQuoteBlock(node, mathPlaceholders));
+					}
+					break;
+				}
+				case 'image':
+					blocks.push(this.createImageBlock(node));
+					break;
+				case 'table':
+					blocks.push(...this.createTableBlocks(node, mathPlaceholders));
+					break;
+				case 'thematicBreak':
+					blocks.push(this.createDividerBlock());
 					break;
 			}
 		});
@@ -296,17 +341,23 @@ export class MarkdownToNotion implements INodeType {
 
 	private createListBlocks(node: any, mathPlaceholders: { [key: string]: string }): NotionBlock[] {
 		const blocks: NotionBlock[] = [];
-		const listType = node.ordered ? 'numbered_list_item' : 'bulleted_list_item';
 
 		for (const listItem of node.children) {
 			if (listItem.type === 'listItem') {
-				blocks.push({
-					object: 'block',
-					type: listType,
-					[listType]: {
-						rich_text: this.convertToRichText(listItem, mathPlaceholders),
-					},
-				});
+				const content = mdastToString(listItem).trim();
+				
+				if (this.isTodoItem(content)) {
+					blocks.push(this.createTodoBlock(listItem, mathPlaceholders));
+				} else {
+					const listType = node.ordered ? 'numbered_list_item' : 'bulleted_list_item';
+					blocks.push({
+						object: 'block',
+						type: listType,
+						[listType]: {
+							rich_text: this.convertToRichText(listItem, mathPlaceholders),
+						},
+					});
+				}
 			}
 		}
 
@@ -434,5 +485,288 @@ export class MarkdownToNotion implements INodeType {
 				this.processInlineFormatting(child, richText, mathPlaceholders);
 			}
 		}
+	}
+
+	private isTodoItem(content: string): boolean {
+		return /^- \[([ x])\]/.test(content);
+	}
+
+	private createTodoBlock(node: any, mathPlaceholders: { [key: string]: string }): NotionBlock {
+		const content = mdastToString(node).trim();
+		const isChecked = /^- \[x\]/.test(content);
+		const textContent = content.replace(/^- \[([ x])\]\s*/, '');
+		
+		return {
+			object: 'block',
+			type: 'to_do',
+			to_do: {
+				rich_text: [{
+					type: 'text',
+					text: {
+						content: this.restoreMathPlaceholders(textContent, mathPlaceholders),
+					},
+				}],
+				checked: isChecked,
+			},
+		};
+	}
+
+	private isDivider(content: string): boolean {
+		return /^(-{3,}|\*{3,})$/.test(content);
+	}
+
+	private createDividerBlock(): NotionBlock {
+		return {
+			object: 'block',
+			type: 'divider',
+			divider: {},
+		};
+	}
+
+	private isStandaloneUrl(content: string): boolean {
+		const urlRegex = /^https?:\/\/[^\s]+$/;
+		return urlRegex.test(content);
+	}
+
+	private createBookmarkBlock(url: string): NotionBlock {
+		return {
+			object: 'block',
+			type: 'bookmark',
+			bookmark: {
+				url: url,
+				caption: [],
+			},
+		};
+	}
+
+	private isBlockEquation(content: string): boolean {
+		return /^\$\$[\s\S]*\$\$$/.test(content.trim());
+	}
+
+	private createEquationBlock(content: string): NotionBlock {
+		const equation = content.replace(/^\$\$\s*|\s*\$\$$/g, '');
+		return {
+			object: 'block',
+			type: 'equation',
+			equation: {
+				expression: equation,
+			},
+		};
+	}
+
+	private isCallout(content: string): boolean {
+		return /^>\s*\[!(note|warning|info|tip|important|caution)\]/i.test(content);
+	}
+
+	private createCalloutBlock(node: any, mathPlaceholders: { [key: string]: string }): NotionBlock {
+		const content = mdastToString(node).trim();
+		const match = content.match(/^>\s*\[!(note|warning|info|tip|important|caution)\]\s*(.*)/is);
+		
+		if (match) {
+			const calloutType = match[1].toLowerCase();
+			const calloutContent = match[2] || '';
+			
+			const iconMap: { [key: string]: string } = {
+				note: '📝',
+				warning: '⚠️',
+				info: 'ℹ️',
+				tip: '💡',
+				important: '❗',
+				caution: '⚠️',
+			};
+
+			return {
+				object: 'block',
+				type: 'callout',
+				callout: {
+					rich_text: [{
+						type: 'text',
+						text: {
+							content: this.restoreMathPlaceholders(calloutContent, mathPlaceholders),
+						},
+					}],
+					icon: {
+						type: 'emoji',
+						emoji: iconMap[calloutType] || '📝',
+					},
+					color: 'default',
+				},
+			};
+		}
+
+		return this.createQuoteBlock(node, mathPlaceholders);
+	}
+
+	private createImageBlock(node: any): NotionBlock {
+		return {
+			object: 'block',
+			type: 'image',
+			image: {
+				type: 'external',
+				external: {
+					url: node.url,
+				},
+				caption: node.alt ? [{
+					type: 'text',
+					text: {
+						content: node.alt,
+					},
+				}] : [],
+			},
+		};
+	}
+
+	private createTableBlocks(node: any, mathPlaceholders: { [key: string]: string }): NotionBlock[] {
+		const blocks: NotionBlock[] = [];
+		
+		if (!node.children || node.children.length === 0) {
+			return blocks;
+		}
+
+		const tableRows = node.children.filter((child: any) => child.type === 'tableRow');
+		
+		for (let i = 0; i < tableRows.length; i++) {
+			const row = tableRows[i];
+			const isHeader = i === 0;
+			
+			const cells = row.children.map((cell: any) => ({
+				rich_text: [{
+					type: 'text',
+					text: {
+						content: this.restoreMathPlaceholders(mdastToString(cell), mathPlaceholders),
+					},
+					annotations: isHeader ? { bold: true } : {},
+				}],
+			}));
+
+			blocks.push({
+				object: 'block',
+				type: 'table_row',
+				table_row: {
+					cells: cells,
+				},
+			});
+		}
+
+		if (blocks.length > 0) {
+			const tableBlock: NotionBlock = {
+				object: 'block',
+				type: 'table',
+				table: {
+					table_width: tableRows[0]?.children?.length || 1,
+					has_column_header: true,
+					has_row_header: false,
+					children: blocks,
+				},
+			};
+			
+			return [tableBlock];
+		}
+
+		return blocks;
+	}
+
+	private restoreMathPlaceholders(text: string, mathPlaceholders: { [key: string]: string }): string {
+		let result = text;
+		for (const [placeholder, originalMath] of Object.entries(mathPlaceholders)) {
+			result = result.replace(placeholder, originalMath);
+		}
+		return result;
+	}
+
+	private preprocessToggleBlocks(markdown: string): string {
+		const detailsRegex = /<details>\s*<summary>(.*?)<\/summary>\s*([\s\S]*?)<\/details>/gi;
+		
+		return markdown.replace(detailsRegex, (match, summary, content) => {
+			const cleanSummary = summary.trim();
+			const cleanContent = content.trim();
+			
+			return `__TOGGLE_START__${cleanSummary}__TOGGLE_CONTENT__${cleanContent}__TOGGLE_END__`;
+		});
+	}
+
+	private isToggleBlock(content: string): boolean {
+		return content.includes('__TOGGLE_START__') && content.includes('__TOGGLE_END__');
+	}
+
+	private createToggleBlock(content: string, mathPlaceholders: { [key: string]: string }): NotionBlock {
+		const match = content.match(/__TOGGLE_START__(.*?)__TOGGLE_CONTENT__(.*?)__TOGGLE_END__/s);
+		
+		if (!match) {
+			return this.createParagraphBlock({ children: [{ type: 'text', value: content }] }, mathPlaceholders) || {
+				object: 'block',
+				type: 'paragraph',
+				paragraph: { rich_text: [] }
+			};
+		}
+
+		const [, summary, toggleContent] = match;
+		const cleanSummary = this.restoreMathPlaceholders(summary.trim(), mathPlaceholders);
+		const cleanContent = this.restoreMathPlaceholders(toggleContent.trim(), mathPlaceholders);
+
+		const children: NotionBlock[] = [];
+		
+		if (cleanContent) {
+			const contentLines = cleanContent.split('\n').filter(line => line.trim());
+			
+			for (const line of contentLines) {
+				const trimmedLine = line.trim();
+				if (trimmedLine) {
+					if (trimmedLine.startsWith('#')) {
+						const level = Math.min((trimmedLine.match(/^#+/) || [''])[0].length, 3);
+						const headingType = `heading_${level}`;
+						const headingText = trimmedLine.replace(/^#+\s*/, '');
+						
+						children.push({
+							object: 'block',
+							type: headingType,
+							[headingType]: {
+								rich_text: [{
+									type: 'text',
+									text: { content: headingText }
+								}]
+							}
+						});
+					} else if (trimmedLine.startsWith('- ')) {
+						children.push({
+							object: 'block',
+							type: 'bulleted_list_item',
+							bulleted_list_item: {
+								rich_text: [{
+									type: 'text',
+									text: { content: trimmedLine.substring(2) }
+								}]
+							}
+						});
+					} else {
+						children.push({
+							object: 'block',
+							type: 'paragraph',
+							paragraph: {
+								rich_text: [{
+									type: 'text',
+									text: { content: trimmedLine }
+								}]
+							}
+						});
+					}
+				}
+			}
+		}
+
+		return {
+			object: 'block',
+			type: 'toggle',
+			toggle: {
+				rich_text: [{
+					type: 'text',
+					text: {
+						content: cleanSummary || 'Toggle'
+					}
+				}],
+				color: 'default',
+				children: children
+			}
+		};
 	}
 }

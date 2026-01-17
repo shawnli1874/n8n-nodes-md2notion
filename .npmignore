@@ -7,7 +7,9 @@ gulpfile.js
 
 # Test files
 core-test.js
-test-content.md
+comprehensive-test.js
+toggle-test.js
+RELEASE-REPORT-*.md
 
 # Development files
 .github/
