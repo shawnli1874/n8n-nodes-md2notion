@@ -950,32 +950,46 @@ export class MarkdownToNotion implements INodeType {
 	}
 
 	private static createHeadingBlock(node: any, mathPlaceholders: { [key: string]: string }, toggleHeadings: boolean = false): NotionBlock {
-		const level = node.depth;
+		let level = Math.min(node.depth, 3); // Notion API only supports heading_1, heading_2, heading_3
 		
-		// H5/H6 always convert to bold paragraphs (Notion limitation)
-		if (level > 4) {
+		if (level === 4) {
+			// Convert heading_4 to heading_3 with different styling
 			const richText = MarkdownToNotion.inlineNodesToRichText(node.children || [], mathPlaceholders);
 			
+			// Add visual distinction for level 4 headings
 			richText.forEach(rt => {
 				if (rt.annotations) {
-					rt.annotations.bold = true;
+					rt.annotations.italic = true;
 				} else {
-					rt.annotations = { bold: true };
+					rt.annotations = { italic: true };
 				}
 			});
 			
+			if (toggleHeadings) {
+				return {
+					object: 'block',
+					type: 'heading_3',
+					heading_3: {
+						rich_text: richText,
+						color: 'gray',
+						is_toggleable: true,
+					},
+				};
+			}
+			
 			return {
 				object: 'block',
-				type: 'paragraph',
-				paragraph: {
+				type: 'heading_3',
+				heading_3: {
 					rich_text: richText,
+					color: 'gray',
 				},
 			};
 		}
 		
 		const richText = MarkdownToNotion.inlineNodesToRichText(node.children || [], mathPlaceholders);
 		
-		const headingType = `heading_${level}` as 'heading_1' | 'heading_2' | 'heading_3' | 'heading_4';
+		const headingType = `heading_${level}` as 'heading_1' | 'heading_2' | 'heading_3';
 		
 		if (toggleHeadings) {
 			return {
