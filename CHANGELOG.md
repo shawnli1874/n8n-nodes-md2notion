@@ -7,6 +7,76 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.6.1] - 2026-01-21
+
+### 🧪 Testing and Documentation
+
+This release adds comprehensive testing infrastructure and documentation for the Toggle Headings feature.
+
+#### ✨ Added
+
+**📝 Test Suite**
+- **Unit Tests**: Added `ToggleHeadings.unit.test.ts` with 9 passing tests
+  - Core logic validation (structure building, API integration, performance)
+  - Fast execution (<1 second)
+  - Zero external dependencies
+- **Integration Test Scripts**: Added 5 real-world testing scripts
+  - `compare-toggle-performance.js` - Performance comparison (Toggle ON vs OFF)
+  - `test-large-document.js` - Large document testing (155 blocks)
+  - `final-demo.js` - Complete feature demonstration
+  - `real-performance-test.js` - Real-world performance metrics
+  - `analyze-performance.js` - Structure analysis
+
+**📚 Documentation**
+- **Test Documentation**: Added comprehensive `__tests__/README.md` (335 lines)
+  - Test structure and organization
+  - Running tests guide
+  - Performance benchmarks
+  - Debugging tips
+- **Testing Strategy**: Added `__tests__/TESTING_STRATEGY.md`
+  - Pragmatic testing approach (Solution D)
+  - Jest + ES modules limitation explained
+  - Manual testing checklist
+  - Known issues and workarounds
+
+**⚙️ Configuration**
+- **Jest Setup**: Enhanced Jest configuration
+  - `jest.config.js` - Simplified configuration
+  - `jest.setup.js` - ES module mocking
+- **Test Scripts**: Added npm test commands
+  - `npm run test:toggle` - Run all Toggle Headings tests
+  - `npm run test:structure` - Structure building tests
+  - `npm run test:api` - API integration tests
+  - `npm run test:performance` - Performance regression tests
+  - `npm run test:integration` - End-to-end workflow tests
+
+#### 📊 Performance Benchmarks
+
+**Documented Performance Data**:
+| Mode | Document Size | API Calls | Duration | Blocks/Call |
+|------|---------------|-----------|----------|-------------|
+| Toggle OFF | 155 blocks | 2 calls | 8.5s | 77.5 |
+| Toggle ON | 155 blocks | 40+ calls | 120s+ | ~3 |
+
+**Performance Ratio**: Toggle OFF is 14x faster than Toggle ON (expected due to recursive nesting)
+
+#### 🔍 Testing Strategy
+
+**Adopted Approach**: Pragmatic Testing (Solution D)
+- ✅ Core logic: Unit tests via Jest (9/9 passing)
+- ✅ Integration: Manual testing scripts with real Notion API
+- ✅ Performance: Documented benchmarks and regression detection
+- ⚠️ Known limitation: Jest + ES modules compatibility (documented with workaround)
+
+#### 🐛 Known Issues
+
+**Jest + ES Modules**:
+- 4 detailed test files require real unified/remark modules
+- Workaround: Use manual integration testing scripts
+- Future fix: Migrate to Vitest (native ES module support)
+
+**No Breaking Changes**: This is a testing infrastructure addition only. All functionality remains unchanged.
+
 ## [1.6.0] - 2026-01-20
 
 ### 🚀 New Feature: Toggle Headings
